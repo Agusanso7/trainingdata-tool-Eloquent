@@ -50,3 +50,5 @@ Makefile
 trainingdata-tool
 
 Project\.cbp
+
+cmake-build-debug/
