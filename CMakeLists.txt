@@ -13,7 +13,7 @@ set (
     "lc0/src/chess/board.cc"
     "lc0/src/chess/position.cc"
     "lc0/src/neural/encoder.cc"
-    "lc0/src/neural/writer.cc"
+    "lc0/src/trainingdata/writer.cc"
     "lc0/src/utils/commandline.cc"
     "lc0/src/utils/logging.cc"
     "lc0/src/utils/random.cc"
