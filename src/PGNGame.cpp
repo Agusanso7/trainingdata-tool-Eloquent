@@ -60,6 +60,8 @@ lczero::Move poly_move_to_lc0_move(move_t move, board_t* board) {
 PGNGame::PGNGame(pgn_t* pgn) {
   strncpy(this->result, pgn->result, PGN_STRING_SIZE);
   strncpy(this->fen, pgn->fen, PGN_STRING_SIZE);
+  strncpy(this->whiteelo, pgn->whiteelo, PGN_STRING_SIZE);
+  strncpy(this->blackelo, pgn->blackelo, PGN_STRING_SIZE);
 
   char str[256];
   while (pgn_next_move(pgn, str, 256)) {
@@ -72,7 +74,6 @@ std::vector<lczero::V4TrainingData> PGNGame::getChunks(Options options) const {
   lczero::ChessBoard starting_board;
   std::string starting_fen =
       std::strlen(this->fen) > 0 ? this->fen : lczero::ChessBoard::kStartposFen;
-
   {
     std::istringstream fen_str(starting_fen);
     std::string board;
@@ -110,6 +111,7 @@ std::vector<lczero::V4TrainingData> PGNGame::getChunks(Options options) const {
   }
 
   char str[256];
+  bool whiteTurn = true;
   for (auto pgn_move : this->moves) {
     // Extract move from pgn
     int move = move_from_san(pgn_move.move, board);
@@ -170,10 +172,18 @@ std::vector<lczero::V4TrainingData> PGNGame::getChunks(Options options) const {
       }
     }
 
+    float elo = 0.0;
+    if (whiteTurn) {
+      elo = strtof(this->whiteelo, (char **)NULL);
+    } else {
+      elo = strtof(this->blackelo, (char **)NULL);
+    }
+    whiteTurn = !whiteTurn;
+
     if (!(bad_move && options.lichess_mode)) {
       // Generate training data
       lczero::V4TrainingData chunk = get_v4_training_data(
-          game_result, position_history, lc0_move, legal_moves, Q);
+          game_result, position_history, lc0_move, legal_moves, Q, elo);
       chunks.push_back(chunk);
       if (options.verbose) {
         std::string result;
@@ -192,7 +202,7 @@ std::vector<lczero::V4TrainingData> PGNGame::getChunks(Options options) const {
             break;
         }
         std::cout << "Write chunk: [" << lc0_move.as_string() << ", " << result
-                  << ", " << Q << "]\n";
+                  << ", " << Q << ", " << elo << "]\n";
       }
     }
 

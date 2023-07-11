@@ -10,12 +10,13 @@ uint64_t resever_bits_in_bytes(uint64_t v) {
 }
 
 lczero::V4TrainingData get_v4_training_data(
-        lczero::GameResult game_result, const lczero::PositionHistory& history,
-        lczero::Move played_move, lczero::MoveList legal_moves, float Q) {
+    lczero::GameResult game_result, const lczero::PositionHistory& history,
+    lczero::Move played_move, lczero::MoveList legal_moves, float Q,
+    float elo) {
   lczero::V4TrainingData result;
 
   // Set version.
-  result.version = 4;
+  result.version = 7;
 
   // Illegal moves will have "-1" probability
   for (auto& probability : result.probabilities) {
@@ -32,7 +33,7 @@ lczero::V4TrainingData get_v4_training_data(
 
   // Populate planes.
   lczero::InputPlanes planes =
-          EncodePositionForNN(history, 8, lczero::FillEmptyHistory::FEN_ONLY);
+      EncodePositionForNN(history, 8, lczero::FillEmptyHistory::FEN_ONLY);
   int plane_idx = 0;
   for (auto& plane : result.planes) {
     plane = resever_bits_in_bytes(planes[plane_idx++].mask);
@@ -41,13 +42,13 @@ lczero::V4TrainingData get_v4_training_data(
   const auto& position = history.Last();
   // Populate castlings.
   result.castling_us_ooo =
-          position.CanCastle(lczero::Position::WE_CAN_OOO) ? 1 : 0;
+      position.CanCastle(lczero::Position::WE_CAN_OOO) ? 1 : 0;
   result.castling_us_oo =
-          position.CanCastle(lczero::Position::WE_CAN_OO) ? 1 : 0;
+      position.CanCastle(lczero::Position::WE_CAN_OO) ? 1 : 0;
   result.castling_them_ooo =
-          position.CanCastle(lczero::Position::THEY_CAN_OOO) ? 1 : 0;
+      position.CanCastle(lczero::Position::THEY_CAN_OOO) ? 1 : 0;
   result.castling_them_oo =
-          position.CanCastle(lczero::Position::THEY_CAN_OO) ? 1 : 0;
+      position.CanCastle(lczero::Position::THEY_CAN_OO) ? 1 : 0;
 
   // Other params.
   result.side_to_move = position.IsBlackToMove() ? 1 : 0;
@@ -67,6 +68,9 @@ lczero::V4TrainingData get_v4_training_data(
   result.root_q = result.best_q = position.IsBlackToMove() ? -Q : Q;
   // We have no D information
   result.root_d = result.best_d = 0.0f;
+
+  // Elo.
+  result.elo = elo;
 
   return result;
 }

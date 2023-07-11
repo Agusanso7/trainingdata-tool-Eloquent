@@ -18,6 +18,8 @@ struct Options {
 struct PGNGame {
   char result[PGN_STRING_SIZE];
   char fen[PGN_STRING_SIZE];
+  char whiteelo[PGN_STRING_SIZE];
+  char blackelo[PGN_STRING_SIZE];
   std::vector<PGNMoveInfo> moves;
 
   explicit PGNGame(pgn_t* pgn);
